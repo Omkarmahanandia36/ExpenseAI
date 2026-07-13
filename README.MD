@@ -199,7 +199,7 @@ Ask it anything:
 | **AI** | Groq API |
 | **Bot** | Telegram Bot API via `aiogram` |
 | **Auth** | JWT · OAuth *(planned)* |
-| **Deployment** | Vercel (frontend) · Railway (backend) · Supabase (database) |
+| **Deployment** | Vercel (frontend) · Render (backend) · Supabase (database) |
 
 ## 🏗 Product Architecture
 

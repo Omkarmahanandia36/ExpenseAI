@@ -1,5 +1,5 @@
 import enum
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     Date as SQLDate,
     DateTime,
+    Time,
     Enum as SQLEnum,
     ForeignKey,
     Index,
@@ -15,6 +16,8 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    Table,
+    Column,
     UniqueConstraint,
     func,
 )
@@ -47,6 +50,10 @@ class PaymentMethod(str, enum.Enum):
     DEBIT_CARD = "debit_card"
     CREDIT_CARD = "credit_card"
     BANK_TRANSFER = "bank_transfer"
+    UPI = "upi"
+    NET_BANKING = "net_banking"
+    WALLET = "wallet"
+    CHEQUE = "cheque"
     PAYPAL = "paypal"
     APPLE_PAY = "apple_pay"
     GOOGLE_PAY = "google_pay"
@@ -108,6 +115,21 @@ class User(Base):
         cascade="all, delete-orphan",
         uselist=False,
     )
+    discord_account: Mapped[Optional["DiscordAccount"]] = relationship(
+        "DiscordAccount",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    slack_account: Mapped[Optional["SlackAccount"]] = relationship(
+        "SlackAccount",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    link_tokens: Mapped[List["LinkToken"]] = relationship(
+        "LinkToken", back_populates="user", cascade="all, delete-orphan"
+    )
     settings: Mapped["UserSettings"] = relationship(
         "UserSettings",
         back_populates="user",
@@ -122,6 +144,15 @@ class User(Base):
     )
     expenses: Mapped[List["Expense"]] = relationship(
         "Expense", back_populates="user", cascade="all, delete-orphan"
+    )
+    accounts: Mapped[List["Account"]] = relationship(
+        "Account", back_populates="user", cascade="all, delete-orphan"
+    )
+    incomes: Mapped[List["Income"]] = relationship(
+        "Income", back_populates="user", cascade="all, delete-orphan"
+    )
+    tags: Mapped[List["Tag"]] = relationship(
+        "Tag", back_populates="user", cascade="all, delete-orphan"
     )
     budgets: Mapped[List["Budget"]] = relationship(
         "Budget", back_populates="user", cascade="all, delete-orphan"
@@ -264,7 +295,19 @@ class Category(Base):
     expenses: Mapped[List["Expense"]] = relationship(
         "Expense", back_populates="category"
     )
+    subcategories: Mapped[List["Subcategory"]] = relationship(
+        "Subcategory", back_populates="category", cascade="all, delete-orphan"
+    )
     budgets: Mapped[List["Budget"]] = relationship("Budget", back_populates="category")
+
+
+# expense_tags junction table
+expense_tags = Table(
+    "expense_tags",
+    Base.metadata,
+    Column("expense_id", UUID(as_uuid=True), ForeignKey("expenses.id", ondelete="CASCADE"), primary_key=True),
+    Column("tag_id", UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True)
+)
 
 
 # 6️⃣ Expense Model
@@ -282,6 +325,12 @@ class Expense(Base):
         ForeignKey("categories.id", ondelete="RESTRICT"),
         nullable=False,
     )
+    subcategory_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("subcategories.id", ondelete="SET NULL"), nullable=True
+    )
+    account_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="SET NULL"), nullable=True
+    )
     amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(5), default="USD", nullable=False)
     merchant: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -291,6 +340,10 @@ class Expense(Base):
         default=PaymentMethod.CASH,
         nullable=False,
     )
+    location: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    is_recurring: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    transaction_time: Mapped[Optional[time]] = mapped_column(Time, nullable=True)
+    receipt_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     expense_date: Mapped[date] = mapped_column(
         SQLDate, default=date.today, nullable=False
     )
@@ -318,6 +371,9 @@ class Expense(Base):
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="expenses")
     category: Mapped["Category"] = relationship("Category", back_populates="expenses")
+    subcategory: Mapped[Optional["Subcategory"]] = relationship("Subcategory", back_populates="expenses")
+    account: Mapped[Optional["Account"]] = relationship("Account", back_populates="expenses")
+    tags: Mapped[List["Tag"]] = relationship("Tag", secondary=expense_tags, back_populates="expenses")
 
     # Composite Indexes
     __table_args__ = (
@@ -448,3 +504,214 @@ class ExpenseRawMessage(Base):
     __table_args__ = (
         Index("idx_expense_raw_messages_user_id_status", "user_id", "status"),
     )
+
+
+# ==========================================
+# 10️⃣ DiscordAccount Model
+# ==========================================
+class DiscordAccount(Base):
+    __tablename__ = "discord_accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    discord_user_id: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False, index=True
+    )
+    discord_username: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    linked_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    last_active_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="discord_account")
+
+
+# ==========================================
+# 11️⃣ SlackAccount Model
+# ==========================================
+class SlackAccount(Base):
+    __tablename__ = "slack_accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    slack_user_id: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False, index=True
+    )
+    slack_team_id: Mapped[str] = mapped_column(
+        String(100), nullable=False, index=True
+    )
+    slack_username: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    linked_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    last_active_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="slack_account")
+
+
+# ==========================================
+# 12️⃣ LinkToken Model
+# ==========================================
+class LinkToken(Base):
+    __tablename__ = "link_tokens"
+
+    token: Mapped[str] = mapped_column(String(100), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    platform: Mapped[str] = mapped_column(String(50), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="link_tokens")
+
+
+# ==========================================
+# 13️⃣ Account Model
+# ==========================================
+class Account(Base):
+    __tablename__ = "accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), default="savings", nullable=False)
+    balance: Mapped[float] = mapped_column(Numeric(12, 2), default=0.00, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="accounts")
+    expenses: Mapped[List["Expense"]] = relationship("Expense", back_populates="account")
+    incomes: Mapped[List["Income"]] = relationship("Income", back_populates="account")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "name", name="uq_accounts_user_name"),
+    )
+
+
+# ==========================================
+# 14️⃣ Subcategory Model
+# ==========================================
+class Subcategory(Base):
+    __tablename__ = "subcategories"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    category_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("categories.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    # Relationships
+    category: Mapped["Category"] = relationship("Category", back_populates="subcategories")
+    expenses: Mapped[List["Expense"]] = relationship("Expense", back_populates="subcategory")
+
+    __table_args__ = (
+        UniqueConstraint("category_id", "name", name="uq_subcategories_category_name"),
+    )
+
+
+# ==========================================
+# 15️⃣ Tag Model
+# ==========================================
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="tags")
+    expenses: Mapped[List["Expense"]] = relationship("Expense", secondary=expense_tags, back_populates="tags")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "name", name="uq_tags_user_name"),
+    )
+
+
+# ==========================================
+# 16️⃣ Income Model
+# ==========================================
+class Income(Base):
+    __tablename__ = "incomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(5), default="INR", nullable=False)
+    category: Mapped[str] = mapped_column(String(100), nullable=False)
+    account_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="SET NULL"), nullable=True
+    )
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    income_date: Mapped[date] = mapped_column(SQLDate, default=date.today, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="incomes")
+    account: Mapped[Optional["Account"]] = relationship("Account", back_populates="incomes")

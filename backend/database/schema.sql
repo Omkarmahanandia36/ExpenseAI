@@ -25,6 +25,7 @@ CREATE TYPE payment_method_type AS ENUM (
     'debit_card',
     'credit_card',
     'bank_transfer',
+    'upi',
     'paypal',
     'apple_pay',
     'google_pay',
@@ -90,6 +91,39 @@ CREATE TABLE user_sessions (
     last_seen_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+-- 🔟 discord_accounts
+CREATE TABLE discord_accounts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    discord_user_id VARCHAR(100) UNIQUE NOT NULL,
+    discord_username VARCHAR(255),
+    linked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_active_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE NOT NULL
+);
+
+-- 11️⃣ slack_accounts
+CREATE TABLE slack_accounts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    slack_user_id VARCHAR(100) UNIQUE NOT NULL,
+    slack_team_id VARCHAR(100) NOT NULL,
+    slack_username VARCHAR(255),
+    linked_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_active_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE NOT NULL
+);
+
+-- 12️⃣ link_tokens
+CREATE TABLE link_tokens (
+    token VARCHAR(100) PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    platform VARCHAR(50) NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 
 -- 4️⃣ user_settings
 CREATE TABLE user_settings (
@@ -197,6 +231,15 @@ CREATE INDEX idx_budgets_user_year_month ON budgets(user_id, year, month);
 -- user_sessions Indexes
 CREATE INDEX idx_user_sessions_refresh_token ON user_sessions(refresh_token_hash);
 CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+
+-- discord_accounts Indexes
+CREATE INDEX idx_discord_user_id ON discord_accounts(discord_user_id);
+
+-- slack_accounts Indexes
+CREATE INDEX idx_slack_user_id ON slack_accounts(slack_user_id);
+
+-- link_tokens Indexes
+CREATE INDEX idx_link_tokens_token ON link_tokens(token);
 
 -- expense_raw_messages Indexes
 CREATE INDEX idx_expense_raw_messages_user_id_status ON expense_raw_messages(user_id, status);

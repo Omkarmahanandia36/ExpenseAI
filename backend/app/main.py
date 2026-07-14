@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api import auth
+from app.api import auth, expenses, incomes, accounts, reports, budgets
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -20,6 +20,11 @@ app.add_middleware(
 
 # Register routers
 app.include_router(auth.router, prefix=settings.API_V1_STR)
+app.include_router(expenses.router, prefix=settings.API_V1_STR)
+app.include_router(incomes.router, prefix=settings.API_V1_STR)
+app.include_router(accounts.router, prefix=settings.API_V1_STR)
+app.include_router(reports.router, prefix=settings.API_V1_STR)
+app.include_router(budgets.router, prefix=settings.API_V1_STR)
 
 @app.get("/", tags=["status"])
 def root_status():

@@ -36,6 +36,8 @@ No forms. No dropdowns. No friction — just text what you spent, and let AI han
 - [See It In Action](#-see-it-in-action)
 - [Target Audience](#-target-audience)
 - [Core Features](#-core-features)
+- [Multi-Channel Integration Strategy](#-multi-channel-integration-strategy)
+- [Connected Accounts](#-connected-accounts)
 - [Technology Stack](#-technology-stack)
 - [Product Architecture](#-product-architecture)
 - [AI Pipeline](#-ai-pipeline)
@@ -54,7 +56,11 @@ No forms. No dropdowns. No friction — just text what you spent, and let AI han
 
 ## 🚀 Vision
 
-ExpenseAI is an AI-powered SaaS product that lets people manage their personal finances through natural conversation.
+ExpenseAI is not simply an expense tracker. It is an AI-powered financial platform that follows users wherever they work and communicate.
+
+Whether users log expenses from the website, Telegram, Discord, Slack, or a browser extension, all information is synchronized through a single secure account.
+
+The backend acts as the single source of truth while every client provides a consistent experience tailored to its platform.
 
 Instead of opening an app, filling out a form, picking a category, and manually saving a transaction, users just send a message:
 
@@ -188,6 +194,123 @@ Ask it anything:
 - Budget alerts
 - Spending progress bars
 - Remaining balance at a glance
+
+## 🔗 Multi-Channel Integration Strategy
+
+ExpenseAI is designed as an **API-first SaaS platform**.
+
+The website serves as the primary application while additional platforms function as optional companion clients.
+
+Every integration communicates with the same backend APIs and accesses the same user account.
+
+### Supported Channels
+
+#### 🌐 Web Application (Primary)
+
+- **Status:** MVP
+- **Purpose:**
+  - User registration
+  - Authentication
+  - Dashboard
+  - Expense management
+  - Reports
+  - Budgets
+  - AI Assistant
+  - Account settings
+
+The website is the source of truth for every user account.
+
+#### 🤖 Telegram Bot
+
+- **Status:** MVP (Optional)
+- **Purpose:**
+  - Natural language expense logging
+  - AI chat
+  - Weekly reports
+  - Budget alerts
+  - Quick spending lookup
+
+Telegram users must first create an ExpenseAI account on the website and then link their Telegram account.
+
+#### 🎮 Discord Bot
+
+- **Status:** Version 1
+- **Purpose:**
+  - Natural language expense logging
+  - AI financial assistant
+  - Expense summaries
+  - Personal finance commands
+- **Examples:**
+  - "Spent $18 at Starbucks"
+  - "Show this month's expenses"
+  - "How much did I spend on food?"
+
+Discord accounts must be linked to an existing ExpenseAI account.
+
+#### 💼 Slack Integration
+
+- **Status:** Version 2
+- **Purpose:**
+  - Personal expense tracking
+  - Business expense logging
+  - Team workspaces
+  - Company spending reports
+- **Future Business Features:**
+  - Shared workspaces
+  - Department budgets
+  - Team reports
+  - Manager dashboards
+  - Expense approval workflow
+
+Slack accounts must be linked to an existing ExpenseAI account.
+
+#### 🌍 Browser Extension
+
+- **Status:** Version 2
+- **Supported Browsers:**
+  - Google Chrome
+  - Microsoft Edge
+  - Brave
+  - Arc
+  - Firefox (future)
+- **Features:**
+  - Quick expense popup
+  - One-click expense capture
+  - AI categorization
+  - Receipt detection
+  - Save online purchases
+  - Detect shopping websites
+  - Open ExpenseAI dashboard
+- **Future Features:**
+  - Amazon purchase detection
+  - Walmart purchase detection
+  - Subscription detection
+  - Online receipt import
+
+The browser extension authenticates using the user's ExpenseAI account.
+
+---
+
+## 🔌 Connected Accounts
+
+ExpenseAI supports multiple connected platforms.
+
+A single user account can connect multiple services.
+
+**Supported integrations:**
+- Website
+- Telegram
+- Discord
+- Slack
+
+**Future integrations:**
+- WhatsApp
+- Mobile App
+- Browser Extension
+- Email Integration
+
+> [!IMPORTANT]
+> **Business Rule:** A connected account cannot exist without a primary ExpenseAI website account.
 
 ## 🔧 Technology Stack
 

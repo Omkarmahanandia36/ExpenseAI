@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
+import OverviewChart from "@/components/OverviewChart";
+import ExpenseChatbot from "@/components/ExpenseChatbot";
+
+
 
 const API_URL = "http://localhost:8000/api/v1";
 
@@ -579,6 +584,11 @@ export default function Home() {
         <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
+        {/* Theme Toggle Button */}
+        <div className="absolute top-6 right-6 z-50">
+          <ThemeToggle />
+        </div>
+
         <div className="w-full max-w-md space-y-8 z-10">
           <div className="flex flex-col items-center text-center">
             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-indigo-600 shadow-lg shadow-emerald-500/20 mb-4 hover:scale-105 transition-transform duration-300">
@@ -792,10 +802,14 @@ export default function Home() {
             </h2>
             <p className="text-xs text-zinc-500 mt-1">Production-ready finance control center.</p>
           </div>
-          <div className="text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Cloud Storage Connected
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <div className="text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Cloud Storage Connected
+            </div>
           </div>
+
         </header>
 
         {/* ======================================================== */}
@@ -829,75 +843,10 @@ export default function Home() {
               </div>
             </div>
 
-            {/* AI conversational logging engine box */}
-            <div className="bg-gradient-to-br from-zinc-900/60 to-zinc-950 border border-zinc-800/85 p-6 md:p-8 rounded-2xl relative">
-              <div className="absolute top-0 right-1/4 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
-              
-              <div className="max-w-2xl">
-                <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                  </span>
-                  AI Expense Logger Chatbot
-                </h3>
-                <p className="text-xs text-zinc-400 mt-1 mb-6">
-                  Log transactions instantly. Try sending things like: 
-                  <code className="text-emerald-400 bg-zinc-900/80 px-2 py-0.5 rounded ml-1 border border-zinc-800 font-mono">"Spent ₹150 for auto ride today in Chandigarh"</code> or 
-                  <code className="text-indigo-400 bg-zinc-900/80 px-2 py-0.5 rounded ml-1 border border-zinc-800 font-mono">"Rs.15000 paid for monthly rent from SBI Savings"</code>
-                </p>
+            {/* Overview Trend Chart */}
+            <OverviewChart expenses={expenses} incomes={incomes} accounts={accounts} />
 
-                <form onSubmit={handleParseExpense} className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="text"
-                    required
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    disabled={isChatLoading}
-                    className="flex-1 bg-zinc-950 border border-zinc-850 hover:border-zinc-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all rounded-xl px-5 py-3.5 text-sm text-zinc-200 focus:outline-none"
-                    placeholder="SBI debited Rs 180 at Swiggy today at 1:45 PM..."
-                  />
-                  <button
-                    type="submit"
-                    disabled={isChatLoading || !chatInput.trim()}
-                    className="sm:w-36 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 text-sm flex items-center justify-center gap-2"
-                  >
-                    {isChatLoading ? "Parsing..." : "Parse & Log"}
-                  </button>
-                </form>
 
-                {chatError && <p className="text-red-400 text-xs mt-3.5">{chatError}</p>}
-
-                {lastParsedExpense && (
-                  <div className="mt-6 p-5 bg-zinc-950/80 border border-emerald-500/30 rounded-xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 px-3 py-1 bg-emerald-500/25 border-l border-b border-emerald-500/30 text-[10px] font-bold text-emerald-400 rounded-bl-lg uppercase tracking-wide">
-                      AI Categorized
-                    </div>
-                    <h4 className="text-sm font-semibold text-zinc-300 flex items-center gap-1.5 mb-3 text-emerald-400">
-                      Logged Transaction Successfully!
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
-                      <div>
-                        <span className="text-[10px] text-zinc-500 uppercase block">Category</span>
-                        <span className="text-xs font-bold text-zinc-300 truncate block">{lastParsedExpense.category ? lastParsedExpense.category.name : "Miscellaneous"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-zinc-500 uppercase block">Amount</span>
-                        <span className="text-xs font-extrabold text-emerald-400 block">{formatAmount(lastParsedExpense.amount, lastParsedExpense.currency)}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-zinc-500 uppercase block">Account</span>
-                        <span className="text-xs font-bold text-zinc-300 truncate block">{lastParsedExpense.account ? lastParsedExpense.account.name : "Cash"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-zinc-500 uppercase block">Merchant</span>
-                        <span className="text-xs font-bold text-zinc-300 truncate block">{lastParsedExpense.merchant || "N/A"}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* Quick overview grids */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1608,6 +1557,15 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Floating Chat Widget */}
+      <ExpenseChatbot
+        token={token}
+        fetchExpenses={fetchExpenses}
+        fetchAccounts={fetchAccounts}
+        fetchReports={fetchReports}
+      />
     </div>
   );
 }
+

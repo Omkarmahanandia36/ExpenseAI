@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { FinanceProvider, useFinance } from "@/context/FinanceContext";
+import ThemeToggle from "@/components/ThemeToggle";
+
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -114,14 +116,20 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             </h2>
             <p className="text-xs text-zinc-500 mt-1">Production-ready finance control center.</p>
           </div>
-          <div className="text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Cloud Storage Connected
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <div className="text-xs text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Cloud Storage Connected
+            </div>
           </div>
         </header>
 
         {children}
       </main>
+
+      {/* Floating Chat Widget */}
+      <ExpenseChatbot />
     </div>
   );
 }

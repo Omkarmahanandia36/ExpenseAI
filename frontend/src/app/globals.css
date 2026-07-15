@@ -1,8 +1,62 @@
 @import "tailwindcss";
 
 :root {
+  /* Default: Clean Light Mode (from user screenshot) */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827;
+  
+  --zinc-950: #ffffff;      /* Main panel background */
+  --zinc-900: #f9fafb;      /* Sidebar background / secondary cards */
+  --zinc-850: #f3f4f6;      /* Sub-backgrounds / input base */
+  --zinc-800: #e5e7eb;      /* Clean gray borders */
+  --zinc-700: #d1d5db;      /* Sub-borders / secondary icons */
+  --zinc-600: #9ca3af;      /* Disabled text / borders */
+  --zinc-500: #6b7280;      /* Muted text / labels */
+  --zinc-400: #4b5563;      /* Secondary text / description */
+  --zinc-300: #374151;      /* Secondary titles / dark text sub */
+  --zinc-200: #1f2937;      /* Dark headers */
+  --zinc-100: #111827;      /* Primary text (almost black) */
+  --zinc-50: #0f172a;
+
+  /* Blue accents matching screenshot logo & active items */
+  --emerald-600: #1d4ed8;
+  --emerald-500: #2563eb;
+  --emerald-400: #3b82f6;
+  
+  --indigo-600: #1d4ed8;
+  --indigo-500: #2563eb;
+  --indigo-400: #60a5fa;
+  
+  --teal-400: #3b82f6;
+}
+
+:root.dark {
+  /* Override: Sleek Dark Mode */
+  --background: #090a0f;
+  --foreground: #f3f4f6;
+
+  --zinc-950: #090a0f;
+  --zinc-900: #11131e;
+  --zinc-850: #181b2a;
+  --zinc-800: #22263a;
+  --zinc-700: #313753;
+  --zinc-600: #4d5680;
+  --zinc-500: #808cb8;
+  --zinc-400: #9ea9d4;
+  --zinc-300: #c8d0eb;
+  --zinc-200: #e4e9f8;
+  --zinc-100: #f3f4f6;
+  --zinc-50: #ffffff;
+
+  --emerald-600: #1d4ed8;
+  --emerald-500: #3b82f6;
+  --emerald-400: #60a5fa;
+  
+  --indigo-600: #2563eb;
+  --indigo-500: #3b82f6;
+  --indigo-400: #93c5fd;
+  
+  --teal-400: #60a5fa;
 }
 
 @theme inline {
@@ -10,17 +64,44 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
+  
+  --color-zinc-950: var(--zinc-950);
+  --color-zinc-900: var(--zinc-900);
+  --color-zinc-850: var(--zinc-850);
+  --color-zinc-800: var(--zinc-800);
+  --color-zinc-700: var(--zinc-700);
+  --color-zinc-600: var(--zinc-600);
+  --color-zinc-500: var(--zinc-500);
+  --color-zinc-400: var(--zinc-400);
+  --color-zinc-300: var(--zinc-300);
+  --color-zinc-200: var(--zinc-200);
+  --color-zinc-100: var(--zinc-100);
+  --color-zinc-50: var(--zinc-50);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-emerald-600: var(--emerald-600);
+  --color-emerald-500: var(--emerald-500);
+  --color-emerald-400: var(--emerald-400);
+  
+  --color-indigo-600: var(--indigo-600);
+  --color-indigo-500: var(--indigo-500);
+  --color-indigo-400: var(--indigo-400);
+  
+  --color-teal-400: var(--teal-400);
+
+  /* Sharp Professional Borders */
+  --radius-3xl: 8px;
+  --radius-2xl: 8px;
+  --radius-xl: 6px;
+  --radius-lg: 4px;
+  --radius-md: 4px;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
+
+
+

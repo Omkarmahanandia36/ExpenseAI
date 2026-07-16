@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useFinance } from "@/context/FinanceContext";
 
-const API_URL = "http://localhost:8000/api/v1";
+const API_URL = "/api";
 
 interface Message {
   id: string;
@@ -99,20 +99,30 @@ export default function ExpenseChatbot({
       const data = await response.json();
 
       if (response.ok) {
-        // Add successful bot message with parsed data
-        const botMsg: Message = {
-          id: `bot-${Date.now()}`,
-          sender: "bot",
-          text: `✅ Logged transaction successfully! I parsed the amount of **${formatAmount(data.amount, data.currency)}** and categorized it under **${data.category ? data.category.name : "Miscellaneous"}**.`,
-          timestamp: new Date(),
-          parsedExpense: data,
-        };
-        setMessages((prev) => [...prev, botMsg]);
+        if (data.is_query) {
+          const botMsg: Message = {
+            id: `bot-${Date.now()}`,
+            sender: "bot",
+            text: data.response_message,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, botMsg]);
+        } else {
+          // Add successful bot message with parsed data
+          const botMsg: Message = {
+            id: `bot-${Date.now()}`,
+            sender: "bot",
+            text: `✅ Logged transaction successfully! I parsed the amount of **${formatAmount(data.amount, data.currency)}** and categorized it under **${data.category ? data.category.name : "Miscellaneous"}**.`,
+            timestamp: new Date(),
+            parsedExpense: data,
+          };
+          setMessages((prev) => [...prev, botMsg]);
 
-        // Refresh global state
-        if (fetchExpenses) fetchExpenses(token);
-        if (fetchAccounts) fetchAccounts(token);
-        if (fetchReports) fetchReports(token);
+          // Refresh global state
+          if (fetchExpenses) fetchExpenses(token);
+          if (fetchAccounts) fetchAccounts(token);
+          if (fetchReports) fetchReports(token);
+        }
       } else {
         // Add error bot message
         const botMsg: Message = {

@@ -22,8 +22,8 @@ export default function OverviewChart({ expenses, incomes, accounts }: OverviewC
     const currentBalance = accounts.reduce((acc, curr) => acc + (curr.balance || 0), 0) || 120420.50;
     
     // Get last 7 days labels
-    const days = [];
-    const dateObjects = [];
+    const days: string[] = [];
+    const dateObjects: Date[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);

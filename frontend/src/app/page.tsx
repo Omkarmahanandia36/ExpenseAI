@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import OverviewChart from "@/components/OverviewChart";
+import BudgetPieChart from "@/components/BudgetPieChart";
 import ExpenseChatbot from "@/components/ExpenseChatbot";
 
 
 
-const API_URL = "http://localhost:8000/api/v1";
+const API_URL = "/api";
 
 export default function Home() {
+  const router = useRouter();
   // Authentication State
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<any | null>(null);
@@ -76,6 +79,13 @@ export default function Home() {
       fetchUserData(savedToken);
     }
   }, []);
+
+  // Redirect to dashboard if logged in
+  useEffect(() => {
+    if (token) {
+      router.push("/overview");
+    }
+  }, [token, router]);
 
   // Timer for link token countdown
   useEffect(() => {
@@ -199,18 +209,12 @@ export default function Home() {
 
   const fetchCategories = async (authToken: string) => {
     try {
-      const response = await fetch(`${API_URL}/expenses`, {
+      const response = await fetch(`${API_URL}/expenses/categories`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       if (response.ok) {
         const data = await response.json();
-        const catsMap: { [key: string]: any } = {};
-        data.forEach((exp: any) => {
-          if (exp.category) {
-            catsMap[exp.category.id] = exp.category;
-          }
-        });
-        setCategories(Object.values(catsMap));
+        setCategories(data);
       }
     } catch (err) {
       console.error("Error categories load:", err);
@@ -843,8 +847,15 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Overview Trend Chart */}
-            <OverviewChart expenses={expenses} incomes={incomes} accounts={accounts} />
+            {/* Overview Trend & Budget Allocation Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <OverviewChart expenses={expenses} incomes={incomes} accounts={accounts} />
+              </div>
+              <div className="lg:col-span-1">
+                <BudgetPieChart budgets={budgets} />
+              </div>
+            </div>
 
 
 
@@ -871,7 +882,7 @@ export default function Home() {
                     return (
                       <div key={b.id} className="space-y-1.5">
                         <div className="flex justify-between text-xs">
-                          <span className="text-zinc-300 font-semibold">{b.category_id}</span>
+                          <span className="text-zinc-300 font-semibold">{b.category?.name || b.category_id}</span>
                           <span className="text-zinc-400">{formatAmount(b.spent_amount, "INR")} / {formatAmount(b.budget_amount, "INR")}</span>
                         </div>
                         <div className="w-full bg-zinc-950 h-2 rounded-full overflow-hidden">
@@ -1093,8 +1104,8 @@ export default function Home() {
                     required
                   >
                     <option value="">Choose Category...</option>
-                    {["Food & Dining", "Transportation", "Housing", "Utilities", "Shopping", "Healthcare", "Education", "Entertainment", "Travel", "Personal Care", "Family", "Financial Obligations", "Business/Work", "Investments", "Miscellaneous"].map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
                 </div>
@@ -1132,7 +1143,7 @@ export default function Home() {
                     <div key={b.id} className="p-5 bg-zinc-950/40 border border-zinc-850 rounded-2xl relative overflow-hidden">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h4 className="text-sm font-bold text-zinc-200">{b.category_id}</h4>
+                          <h4 className="text-sm font-bold text-zinc-200">{b.category?.name || b.category_id}</h4>
                           <span className="text-[10px] text-zinc-500 uppercase tracking-wide">Month: {b.month}/{b.year}</span>
                         </div>
                         <button

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const API_URL = "http://localhost:8000/api/v1";
+const API_URL = "/api";
 
 interface FinanceContextType {
   token: string | null;

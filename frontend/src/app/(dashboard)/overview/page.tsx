@@ -3,22 +3,14 @@
 import React from "react";
 import { useFinance } from "@/context/FinanceContext";
 import OverviewChart from "@/components/OverviewChart";
-import ExpenseChatbot from "@/components/ExpenseChatbot";
+import BudgetPieChart from "@/components/BudgetPieChart";
 
-
-
-export default function DashboardPage() {
+export default function OverviewPage() {
   const {
     expenses,
     incomes,
     accounts,
     budgets,
-    chatInput,
-    setChatInput,
-    isChatLoading,
-    lastParsedExpense,
-    chatError,
-    handleParseExpense,
   } = useFinance();
 
   // Helper formats
@@ -35,7 +27,7 @@ export default function DashboardPage() {
 
   const getTotalExpensesINR = () => {
     return expenses
-      .filter((e) => e.currency === "INR")
+      .filter((e) => !e.deleted_at && e.currency === "INR")
       .reduce((acc, curr) => acc + curr.amount, 0);
   };
 
@@ -47,11 +39,6 @@ export default function DashboardPage() {
 
   const getNetBalanceINR = () => {
     return getTotalIncomeINR() - getTotalExpensesINR();
-  };
-
-  const onParseSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleParseExpense(chatInput);
   };
 
   return (
@@ -82,9 +69,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Overview Trend Chart */}
-      <OverviewChart expenses={expenses} incomes={incomes} accounts={accounts} />
-
+      {/* Overview Trend & Budget Allocation Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <OverviewChart expenses={expenses} incomes={incomes} accounts={accounts} />
+        </div>
+        <div className="lg:col-span-1">
+          <BudgetPieChart budgets={budgets} />
+        </div>
+      </div>
 
       {/* Quick overview grids */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -109,7 +102,7 @@ export default function DashboardPage() {
               return (
                 <div key={b.id} className="space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-zinc-300 font-semibold">{b.category_id}</span>
+                    <span className="text-zinc-300 font-semibold">{b.category?.name || b.category_id}</span>
                     <span className="text-zinc-400">{formatAmount(b.spent_amount, "INR")} / {formatAmount(b.budget_amount, "INR")}</span>
                   </div>
                   <div className="w-full bg-zinc-950 h-2 rounded-full overflow-hidden">

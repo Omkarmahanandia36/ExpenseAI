@@ -5,6 +5,7 @@ from typing import List, Optional
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -22,7 +23,7 @@ from app.models import (
     AIStatus,
     PaymentMethod,
 )
-from app.schemas import ExpenseResponse, ExpenseParseRequest, ExpenseCreate, ExpenseUpdate
+from app.schemas import ExpenseResponse, ExpenseParseRequest, ExpenseCreate, ExpenseUpdate, CategoryResponse
 from app.services.ai import AIParserService
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
@@ -171,20 +172,34 @@ def create_expense_instance(db: Session, user: User, parsed_data: dict, source: 
     return expense
 
 
-@router.post("/parse", response_model=ExpenseResponse)
+@router.post("/parse")
 async def parse_and_create_expense(
     payload: ExpenseParseRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Parses a raw natural language message using AI, maps/creates the category,
-    saves the expense, and logs the raw message request.
+    Parses a raw natural language message using AI. Can return either an expense
+    transaction or a conversational query answer.
     """
     start_time = time.time()
     
     try:
-        parsed_data = await AIParserService.parse_with_ai(payload.raw_message)
+        result = await AIParserService.process_message(payload.raw_message, current_user, db)
+        if result.get("is_query"):
+            # Log query request
+            raw_msg_log = ExpenseRawMessage(
+                user_id=current_user.id,
+                source=payload.source,
+                raw_message=payload.raw_message,
+                status=AIStatus.PARSED,
+                processing_time=int((time.time() - start_time) * 1000)
+            )
+            db.add(raw_msg_log)
+            db.commit()
+            return result
+            
+        parsed_data = result["expense_data"]
     except Exception as exc:
         # Save failed raw message log
         raw_msg_log = ExpenseRawMessage(
@@ -198,7 +213,7 @@ async def parse_and_create_expense(
         db.commit()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Could not parse expense message: {str(exc)}"
+            detail=f"Could not parse message: {str(exc)}"
         )
         
     try:
@@ -218,7 +233,12 @@ async def parse_and_create_expense(
         
         db.commit()
         db.refresh(expense)
-        return expense
+        
+        expense_data = jsonable_encoder(ExpenseResponse.model_validate(expense))
+        return {
+            "is_query": False,
+            **expense_data
+        }
         
     except Exception as exc:
         db.rollback()
@@ -295,6 +315,20 @@ def create_expense(
     db.commit()
     db.refresh(expense)
     return expense
+
+
+@router.get("/categories", response_model=List[CategoryResponse])
+def list_categories(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns list of all default and user custom categories.
+    """
+    categories = db.query(Category).filter(
+        (Category.user_id == current_user.id) | (Category.user_id.is_(None))
+    ).order_by(Category.name.asc()).all()
+    return categories
 
 
 @router.get("", response_model=List[ExpenseResponse])

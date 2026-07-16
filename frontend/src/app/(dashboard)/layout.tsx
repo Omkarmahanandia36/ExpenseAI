@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { FinanceProvider, useFinance } from "@/context/FinanceContext";
 import ThemeToggle from "@/components/ThemeToggle";
+import ExpenseChatbot from "@/components/ExpenseChatbot";
 
 
 function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
@@ -65,9 +66,9 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         {/* Navigation Tabs */}
         <nav className="flex-1 p-4 space-y-1">
           {[
-            { id: "dashboard", href: "/dashboard", label: "Overview", icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" },
-            { id: "expenses", href: "/expenses", label: "Expenses", icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" },
-            { id: "incomes", href: "/incomes", label: "Incomes", icon: "M12 4v16m8-8H4" },
+            { id: "overview", href: "/overview", label: "Overview", icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" },
+            { id: "expenses", href: "/expenses", label: "Expenses", icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2 2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" },
+            { id: "income", href: "/income", label: "Incomes", icon: "M12 4v16m8-8H4" },
             { id: "budgets", href: "/budgets", label: "Budgets", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
             { id: "accounts", href: "/accounts", label: "Accounts", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
             { id: "reports", href: "/reports", label: "Reports & Analytics", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
@@ -112,7 +113,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-zinc-100 capitalize">
-              {pathname.replace("/", "") === "dashboard" ? "Dashboard Overview" : pathname.replace("/", "")}
+              {pathname.replace("/", "") === "overview" ? "Dashboard Overview" : pathname.replace("/", "")}
             </h2>
             <p className="text-xs text-zinc-500 mt-1">Production-ready finance control center.</p>
           </div>

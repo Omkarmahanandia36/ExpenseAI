@@ -41,22 +41,75 @@ export default function OverviewPage() {
     return getTotalIncomeINR() - getTotalExpensesINR();
   };
 
+  const parseExpenseDate = (e: any) => {
+    if (e.expense_date) {
+      const parts = e.expense_date.split("-");
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        return new Date(year, month, day);
+      }
+    }
+    return new Date(e.created_at);
+  };
+
+  const getTodayExpenses = () => {
+    const todayStr = new Date().toDateString();
+    return expenses.filter(
+      (e) => !e.deleted_at && parseExpenseDate(e).toDateString() === todayStr
+    );
+  };
+
+  const getTodaySpendingDisplay = () => {
+    const todayExps = getTodayExpenses();
+    if (todayExps.length === 0) {
+      return formatAmount(0, "INR");
+    }
+    
+    // Group and sum by currency
+    const byCurrency: { [key: string]: number } = {};
+    todayExps.forEach((e) => {
+      byCurrency[e.currency] = (byCurrency[e.currency] || 0) + e.amount;
+    });
+    
+    return Object.entries(byCurrency)
+      .map(([curr, amt]) => formatAmount(amt, curr))
+      .join(" + ");
+  };
+
+  const getTodayDateFormatted = () => {
+    return new Date().toLocaleDateString("en-US", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    });
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Quick stats grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 p-6 rounded-2xl relative overflow-hidden group hover:border-amber-500/40 transition-colors duration-300">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none"></div>
+          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Today's Spending</span>
+          <p className="text-3xl font-extrabold text-amber-400 tracking-tight mt-2">{getTodaySpendingDisplay()}</p>
+          <div className="text-xs text-zinc-400 mt-2">{getTodayDateFormatted()}</div>
+        </div>
+
         <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 p-6 rounded-2xl relative overflow-hidden group hover:border-emerald-500/40 transition-colors duration-300">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl pointer-events-none"></div>
           <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Total Spending (INR)</span>
           <p className="text-3xl font-extrabold text-emerald-400 tracking-tight mt-2">{formatAmount(getTotalExpensesINR(), "INR")}</p>
-          <div className="text-[10px] text-zinc-500 mt-2">Parsed from bot chats & SMS</div>
+          <div className="text-xs text-zinc-400 mt-2">Parsed from bot chats & SMS</div>
         </div>
 
         <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 p-6 rounded-2xl relative overflow-hidden group hover:border-indigo-500/40 transition-colors duration-300">
           <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none"></div>
           <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Total Income (INR)</span>
           <p className="text-3xl font-extrabold text-indigo-400 tracking-tight mt-2">{formatAmount(getTotalIncomeINR(), "INR")}</p>
-          <div className="text-[10px] text-zinc-500 mt-2">Salary, Freelance, Dividends</div>
+          <div className="text-xs text-zinc-400 mt-2">Salary, Freelance, Dividends</div>
         </div>
 
         <div className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 p-6 rounded-2xl relative overflow-hidden group hover:border-purple-500/40 transition-colors duration-300">
@@ -65,7 +118,7 @@ export default function OverviewPage() {
           <p className={`text-3xl font-extrabold tracking-tight mt-2 ${getNetBalanceINR() >= 0 ? "text-teal-400" : "text-rose-400"}`}>
             {formatAmount(getNetBalanceINR(), "INR")}
           </p>
-          <div className="text-[10px] text-zinc-500 mt-2">Cash Flow Surplus/Deficit</div>
+          <div className="text-xs text-zinc-400 mt-2">Cash Flow Surplus/Deficit</div>
         </div>
       </div>
 
